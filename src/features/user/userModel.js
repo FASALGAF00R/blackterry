@@ -14,6 +14,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         unique: true,
     },
+    Otp :{
+        type: Number,   
+    }
 });
 const User = mongoose.model('User', userSchema);
 
