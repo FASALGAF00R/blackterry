@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { sendOTPEmail } = require('../../../config/emailservice')
 const axios = require('axios');
 const NodeCache = require("node-cache");
+// use to store OTP sessions temporarily
 const otpCache = new NodeCache({ stdTTL: 300 });
 
 require('dotenv').config();
@@ -36,7 +37,9 @@ const registerUser = async (req, res) => {
             console.log(response, "response");
             if (response.data.Status === "Success") {
                 const sessionId = response.data.Details;
-                otpCache.set(phone, {
+                // saving values to cache with phone as key
+                otpCache.set(phone, 
+                    {
                     sessionId,
                     name,
                     email,
