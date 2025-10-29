@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 
 
 const sendOTPEmail = async (email, otp) => {
-      try {
+      try {        
             const transporter = nodemailer.createTransport({
                   service: 'gmail',
                   auth: {

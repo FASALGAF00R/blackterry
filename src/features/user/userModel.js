@@ -16,6 +16,15 @@ const userSchema = new mongoose.Schema({
     },
     Otp :{
         type: Number,   
+
+    },
+    phone :{
+        type: Number,
+        unique: true
+    },
+    isverified:{
+        type: Boolean,
+        default: false
     }
 });
 const User = mongoose.model('User', userSchema);
