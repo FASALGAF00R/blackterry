@@ -65,13 +65,17 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid password" })
         }
 
-        if (finduser.isverified === true) {
-            const token = jwt.sign({ id: finduser._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        if (finduser.isblock === true) {
+            return res.status(403).json({ message: "Your account has been blocked" });
+        }
+
+        if (finduser.isverified === true ) {
+            const token = jwt.sign({ id: finduser._id }, process.env.JWT_SECRET);
             console.log(token, "token");
 
             return res.status(200).json({ message: "user  logged in successfully", success: true, token })
         } else {
-            return res.json({ message: "Please verify your email to login" })
+            return res.json({ message: "Please verify your email to login " })
         }
 
     } catch (error) {
@@ -101,19 +105,20 @@ const otpverfiy = async (req, res) => {
         if (response.data.Status !== "Success") {
             return res.status(400).json({ message: "Invalid OTP" });
         }
-        const hashedPassword=await  bcrypt.hash (sessionData.password,10)
-        console.log(hashedPassword,"hashedPassword");
-        const newUser = new User({
-            name: sessionData.name,
-            email: sessionData.email,
-            phone: sessionData.phone,
-            password: hashedPassword,
-            isverified: true
-        });
-        await newUser.save();
-        otpCache.del(phone);
-
-        return res.status(200).json({ message: "OTP verified successfully, user registered!" });
+            const hashedPassword=await  bcrypt.hash (sessionData.password,10)
+            console.log(hashedPassword,"hashedPassword");
+            const newUser = new User({
+                name: sessionData.name,
+                email: sessionData.email,
+                phone: sessionData.phone,
+                password: hashedPassword,
+                isverified: true
+            });
+            await newUser.save();
+            otpCache.del(phone);
+    
+            return res.status(200).json({ message: "OTP verified successfully, user registered!" });
+        
 
     } catch (error) {
         console.log(error.message);

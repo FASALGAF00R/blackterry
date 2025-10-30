@@ -4,8 +4,8 @@ const jwttokenverify =require('../../middleware/jwtMiddleware');
 
 const addressController = require('./addresscontroller');
 
-router.post('/add',jwttokenverify, addressController.addaddress);
-router.get('/:id',jwttokenverify, addressController.getspecificaddress);
-router.put('/update/:id',jwttokenverify, addressController.updateaddress);
-router.delete('/delete/:id',jwttokenverify,addressController.deleteaddress)
+router.post('/add', addressController.addaddress);
+router.get('/:id', addressController.getspecificaddress);
+router.patch('/update/:id', addressController.updateaddress);
+router.delete('/delete/:id',addressController.deleteaddress)
 module.exports = router;

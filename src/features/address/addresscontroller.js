@@ -5,8 +5,6 @@ const addaddress=async(req,res)=>{
     try {
         const {userid,firstname,lastname,number,address,city,state,country}=req.body; 
         console.log(userid,"oooooo");
-        
-    
         const newaddress=new Address({
             userid,
             firstname,
@@ -50,7 +48,7 @@ const updateaddress=async(req,res)=>{
         const updatedaddress=req.body;
         console.log(updateaddress,"...........");
         
-        const addressupdate=await Address.findByIdAndUpdate(addressid,updatedaddress,{new:true})
+        const addressupdate=await Address.findByIdAndUpdate(addressid,{$set:updatedaddress},{new:true})
         if(!addressupdate){
             return res.status(404).json({message:"Address not found"});
         }else{

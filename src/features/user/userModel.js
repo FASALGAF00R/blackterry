@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
     isverified:{
         type: Boolean,
         default: false
+    },
+    isblock :{
+        type:Boolean,
+        default:true
     }
 });
 const User = mongoose.model('User', userSchema);
