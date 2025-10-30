@@ -129,8 +129,12 @@ const otpverfiy = async (req, res) => {
 
 
 
+
+
+
 module.exports = {
     registerUser,
     loginUser,
-    otpverfiy
+    otpverfiy,
+    
 };

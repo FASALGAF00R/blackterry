@@ -8,4 +8,6 @@ router.post('/register', userController.registerUser);
 router.post('/login',userController.loginUser);
 router.post('/otpverify',userController.otpverfiy)
 
+// router.get('/products',userController.listproducts);    
+
 module.exports = router;

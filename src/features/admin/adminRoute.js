@@ -3,7 +3,7 @@ const router = express.Router();
 const upload = require('../../middleware/multerMiddleware');
 const userManagementController = require('./userManagementController');
 const categoryController = require('./categoryController');
-const { addProduct } = require('./productController');
+const productController  = require('./productController');
 
 
 router.get('/getusers', userManagementController.getAllUsers);
@@ -13,7 +13,7 @@ router.patch('/unblock/:userid',userManagementController.unblockuser)
 router.post('/addcategory',categoryController.addCategory)
 router.put('/editcategory/:id',categoryController.editCategory)
 
-router.post('/addproduct',upload.array('images',5),addProduct)
+router.post('/addproduct',upload.array('images',5),productController.addProduct)
 
 
 
