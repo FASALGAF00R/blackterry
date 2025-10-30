@@ -1,10 +1,13 @@
 const express = require('express');
 const app = express();
+const path = require('path');
+
 
 // middlewares,apis,routes
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const userRoute = require('./features/user/userRoute');
 const addressRoute = require('./features/address/addressRoute');
