@@ -1,7 +1,7 @@
 const category = require("../category/categoryModel");
 const Product = require("../products/productModel");
 
-exports.addProduct = async (req, res) => {
+const addProduct = async (req, res) => {
     console.log("entereddd");
     try {
         const {categoryid, title, description, actualPrice,product_Code,discount,manufacture_name,manufacturerBrand,manufacturerAddress} = req.body;   
@@ -36,6 +36,9 @@ exports.addProduct = async (req, res) => {
     }
 }
 
+module.exports = {
+    addProduct
+};
 
 
 

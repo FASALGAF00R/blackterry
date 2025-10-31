@@ -1,4 +1,5 @@
 const User = require('./userModel');
+const products = require('../products/productModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendOTPEmail } = require('../../../config/emailservice')
@@ -31,26 +32,26 @@ const registerUser = async (req, res) => {
             //     await user.save();
             //     res.status(201).json({ message: "User registered successfully" })
             // }
-    
-         } else {
+
+        } else {
             const response = await axios.get(`https://2factor.in/API/V1/${mobapikey}/SMS/${phone}/AUTOGEN/OTP1`)
             console.log(response, "response");
             if (response.data.Status === "Success") {
                 const sessionId = response.data.Details;
                 // saving values to cache with phone as key
-                otpCache.set(phone, 
+                otpCache.set(phone,
                     {
-                    sessionId,
-                    name,
-                    email,
-                    phone,
-                    password,
-                });
-              return  res.status(200).json({ message: 'OTP sent successfully' });
+                        sessionId,
+                        name,
+                        email,
+                        phone,
+                        password,
+                    });
+                return res.status(200).json({ message: 'OTP sent successfully' });
             } else {
                 return res.status(500).json({ message: 'Failed to send OTP. Try again later.' })
             }
-         }
+        }
     } catch (error) {
         console.log(error.message);
     }
@@ -58,7 +59,7 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;        
+        const { email, password } = req.body;
         const finduser = await User.findOne({ email })
         const passwordcompare = await bcrypt.compare(password, finduser.password)
         if (!passwordcompare) {
@@ -69,7 +70,7 @@ const loginUser = async (req, res) => {
             return res.status(403).json({ message: "Your account has been blocked" });
         }
 
-        if (finduser.isverified === true ) {
+        if (finduser.isverified === true) {
             const token = jwt.sign({ id: finduser._id }, process.env.JWT_SECRET);
             console.log(token, "token");
 
@@ -95,8 +96,8 @@ const otpverfiy = async (req, res) => {
         console.log(otp, phone, ".......");
         const mobapikey = process.env.MOBILE_API_KEY;
         const sessionData = otpCache.get(phone);
-        console.log(sessionData,"sessionnn");
-        
+        console.log(sessionData, "sessionnn");
+
         if (!sessionData) {
             return res.status(400).json({ message: "OTP expired or invalid" });
         }
@@ -105,20 +106,20 @@ const otpverfiy = async (req, res) => {
         if (response.data.Status !== "Success") {
             return res.status(400).json({ message: "Invalid OTP" });
         }
-            const hashedPassword=await  bcrypt.hash (sessionData.password,10)
-            console.log(hashedPassword,"hashedPassword");
-            const newUser = new User({
-                name: sessionData.name,
-                email: sessionData.email,
-                phone: sessionData.phone,
-                password: hashedPassword,
-                isverified: true
-            });
-            await newUser.save();
-            otpCache.del(phone);
-    
-            return res.status(200).json({ message: "OTP verified successfully, user registered!" });
-        
+        const hashedPassword = await bcrypt.hash(sessionData.password, 10)
+        console.log(hashedPassword, "hashedPassword");
+        const newUser = new User({
+            name: sessionData.name,
+            email: sessionData.email,
+            phone: sessionData.phone,
+            password: hashedPassword,
+            isverified: true
+        });
+        await newUser.save();
+        otpCache.del(phone);
+
+        return res.status(200).json({ message: "OTP verified successfully, user registered!" });
+
 
     } catch (error) {
         console.log(error.message);
@@ -127,14 +128,63 @@ const otpverfiy = async (req, res) => {
 }
 
 
+const listproducts = async (req, res) => {
+    try {
+        const { page = 1, limit = 1, sortby = 'title', order = 'asc', categoryName, minprice, maxprice } = req.query
+        console.log(req.body, "oooooooooooooooooooooooooo");
+
+        const skip = (page - 1) * limit
+        const sorOrder = order === "asc" ? 1 : -1;
+        const matchstage = {}
+        if (categoryName) matchstage.categoryName = categoryName;
+
+        if (minprice && maxprice) {
+            matchstage.actualPrice = { $gte: Number(minprice), $lte: Number(maxprice) };
+        } else if (minprice) {
+            matchstage.actualPrice = { $gte: Number(minprice) };
+        } else if (maxprice) {
+            matchstage.actualPrice = { $lte: Number(maxprice) };
+        }
+
+        const Allproducts = await products.aggregate([
+
+            { $match: matchstage },
+            {
+                $project
+                    : {
+                    categoryName: 1, title: 1, description: 1,
+                    actualPrice: 1, images: 1,
+                    product_Code: 1, discount: 1,
+                    offerPrice: { $subtract: ["$actualPrice", { $multiply: ["$actualPrice", { $divide: ["$discount", 100] }] }] },
+                    manufacture_name: 1, manufacturerBrand: 1, manufacturerAddress: 1, totalStock: 1
+                }},
+                     { $sort: { [sortby]: sorOrder } },
+            { $skip: (page - 1) * Number(limit) },
+            { $limit: Number(limit) }])
+        console.log(Allproducts, 'llllllll');
+
+        return res.status(200).json(Allproducts);
+    } catch (error) {
+        console.log(error.message);
+    }
 
 
 
 
+
+
+
+
+
+
+
+
+}
 
 module.exports = {
     registerUser,
     loginUser,
     otpverfiy,
-    
+    listproducts
+
 };
