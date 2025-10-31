@@ -130,13 +130,12 @@ const otpverfiy = async (req, res) => {
 
 const listproducts = async (req, res) => {
     try {
-        const { page = 1, limit = 1, sortby = 'title', order = 'asc', categoryName, minprice, maxprice } = req.query
+        const { page = 1, limit = 1, sortby = 'title', order = 'asc',search,searchcat, categoryName, minprice, maxprice } = req.query
         console.log(req.body, "oooooooooooooooooooooooooo");
-
-        const skip = (page - 1) * limit
-        const sorOrder = order === "asc" ? 1 : -1;
+        
         const matchstage = {}
-        if (categoryName) matchstage.categoryName = categoryName;
+        if (categoryName) 
+            matchstage.categoryName = categoryName;
 
         if (minprice && maxprice) {
             matchstage.actualPrice = { $gte: Number(minprice), $lte: Number(maxprice) };
@@ -146,8 +145,7 @@ const listproducts = async (req, res) => {
             matchstage.actualPrice = { $lte: Number(maxprice) };
         }
 
-        const Allproducts = await products.aggregate([
-
+        const pipeline = [
             { $match: matchstage },
             {
                 $project
@@ -158,15 +156,40 @@ const listproducts = async (req, res) => {
                     offerPrice: { $subtract: ["$actualPrice", { $multiply: ["$actualPrice", { $divide: ["$discount", 100] }] }] },
                     manufacture_name: 1, manufacturerBrand: 1, manufacturerAddress: 1, totalStock: 1
                 }},
-                     { $sort: { [sortby]: sorOrder } },
-            { $skip: (page - 1) * Number(limit) },
-            { $limit: Number(limit) }])
-        console.log(Allproducts, 'llllllll');
+                     ]
 
-        return res.status(200).json(Allproducts);
+                     if(search){
+                        matchstage.$or=[{title:{$regex:search,$options:'i'}},
+                            {searchcat:{$regex:search,$options:'i'}}
+                        ]
+                     }
+
+
+        if(sortby){
+            const sortOrder = order === 'desc' ? -1 : 1;
+      pipeline.push({ $sort: { [sortby]: sortOrder } });
+        }
+
+        const totalProducts = await products.countDocuments(matchstage);
+
+        if (page && limit) {
+      const skip = (Number(page) - 1) * Number(limit);
+      pipeline.push({ $skip: skip });
+      pipeline.push({ $limit: Number(limit) });
+    }
+
+    const Allproducts = await products.aggregate(pipeline);
+
+    return res.status(200).json({
+      totalProducts,
+      totalPages: page && limit ? Math.ceil(totalProducts / Number(limit)) : 1,
+      currentPage: page ? Number(page) : 1,
+      products: Allproducts
+    });
     } catch (error) {
         console.log(error.message);
     }
+
 
 
 
