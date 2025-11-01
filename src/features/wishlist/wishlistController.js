@@ -1,24 +1,28 @@
 const product = require('../products/productModel')
 const user = require('../user/userModel');
-const wishlist = require("../wishlist/wishlistModel");
+const wishlist=require('../wishlist/wishlistModel')
 
 exports.addwishlist = async (req, res) => {
     console.log("tth");
     try {
-        const { userid, productid } = req.body;
+        const { userId, productId } = req.body;
         console.log(req.body, "//");
-        const findproduct = await product.findById(productid)
+        console.log(typeof userId);
+        console.log(typeof productId);
+        
+        
+        const findproduct = await product.findById(productId)
         console.log(findproduct, "ooo");
-        const finduser = await user.findById(userid)
+        const finduser = await user.findById(userId)
         console.log(finduser, "dsjdjf");
 
-        const newwishlist = new wishlistModel({
-            userId: userid,
-            productId: productid
+        const newwishlist = new wishlist({
+            userId: userId,
+            productId: productId
         })
         await newwishlist.save()
 
-        return res.status(200).json({ message: "product added to wishlist succesfully", product: findproduct })
+        return res.status(200).json({ message: "product added to wishlist succesfully", product: newwishlist })
 
     } catch (error) {
         console.log(error.message);

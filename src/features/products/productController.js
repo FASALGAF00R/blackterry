@@ -1,7 +1,9 @@
 const product=require('../products/productModel')
 
 
-const listproducts=async(req,res)=>{
+const productsuser=async(req,res)=>{
+    console.log("okokkoko");
+    
     try {
         console.log("h");
         const products= await product.find({});
@@ -19,6 +21,7 @@ const listproducts=async(req,res)=>{
 
 
 
+
 module.exports = {
-    listproducts
+    productsuser
 };
