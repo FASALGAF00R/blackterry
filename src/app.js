@@ -15,12 +15,14 @@ const profileRoute = require('./features/profile/profileRoute');
 const adminRoute = require('./features/admin/adminRoute');
 const wishlistRoute=require('./features/wishlist/wishlistRoute')
 const cartRoute=require('./features/cart/cartRoute')
+const checkoutRoute=require('./features/checkout/checkoutRoute')
 
 app.use('/api/users', userRoute);
 app.use('/api/address',addressRoute)
 app.use('/api/profile',profileRoute)
 app.use('/api/wishlist',wishlistRoute)
 app.use('/api/cart',cartRoute)
+app.use('/api/checkout',checkoutRoute)
 app.use('/api/admin',adminRoute)
 
 module.exports = app;

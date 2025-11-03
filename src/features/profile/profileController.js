@@ -8,7 +8,7 @@ try {
     if(!userprofile){
         return res.status(404).json({message:"user not found"});
     }
-    res.status(200).json({userprofile});
+   return res.status(200).json({userprofile});
     
 } catch (error) {
     console.log(error.message);
