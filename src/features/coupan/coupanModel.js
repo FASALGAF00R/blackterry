@@ -29,3 +29,10 @@ const couponSchema = mongoose.Schema({
 })
 
 module.exports = mongoose.model('coupon', couponSchema)
+
+
+
+
+
+
+
