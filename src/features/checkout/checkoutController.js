@@ -30,14 +30,10 @@ exports.Applycoupan=async (req,res)=>{
         console.log(userId,"userid");
         console.log(couponcode,"coupancode");
         console.log(Cartamount,"cartamount");
-        
-        
-        
-
+          
         const findcart=await cartModel.findOne({userId:userId})
         console.log(findcart,"findcartttttttttt");
-        
-        
+             
         if(!findcart){
             return res.status(404).json({message:"no product found on cart"})
         }

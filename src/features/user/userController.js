@@ -130,13 +130,14 @@ const otpverfiy = async (req, res) => {
 
 const listproducts = async (req, res) => {
     try {
-        // 
-        const { page = 1, limit = 1, sortby = 'title', order = 'asc', search, categoryName, minprice, maxprice } = req.query
-        console.log( search, "search");
+        
+        const { page = 1, limit = 1, sortby = 'title', order = 'asc', title, categoryName, minprice, maxprice } = req.query
+        console.log( title, "search");
         console.log(categoryName,"category");
         
-
         const matchstage = {}
+        console.log(matchstage,'matchstage');
+        
         if (categoryName)
             matchstage.categoryName = categoryName;
 
@@ -148,9 +149,9 @@ const listproducts = async (req, res) => {
             matchstage.actualPrice = { $lte: Number(maxprice) };
         }
 
-        if (search) {
-            matchstage.$or = [{ title: { $regex: search, $options: 'i' } },
-            { categoryName: { $regex: search, $options: 'i' } }
+        if (title ) {
+            matchstage.$or = [{ title: { $regex: title, $options: 'i' } },
+            { categoryName: { $regex: categoryName, $options: 'i' } }
             ]
         }
 
@@ -167,9 +168,6 @@ const listproducts = async (req, res) => {
                 }
             },
         ]
-
-
-
 
         const sortOrder = order === 'desc' ? -1 : 1;
         pipeline.push({ $sort: { [sortby]: sortOrder } });

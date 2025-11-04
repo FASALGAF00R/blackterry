@@ -5,7 +5,7 @@ const couponSchema = mongoose.Schema({
         required: true,
          unique: true
 
-    },
+    },      
     couponamount: {
         type: Number,
         required: true
@@ -29,6 +29,7 @@ const couponSchema = mongoose.Schema({
 })
 
 module.exports = mongoose.model('coupon', couponSchema)
+
 
 
 

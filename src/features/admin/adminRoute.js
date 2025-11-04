@@ -16,6 +16,8 @@ router.put('/editcategory/:id',categoryController.editCategory)
 router.post('/addproduct',upload.array('images',5),productController.addProduct)
 router.post('/addcoupan',coupanController.Addcoupan)
 
+router.put('/editcoupan/:coupanid',coupanController.Editcoupan)
+router.delete('/deletecoupan/:coupanid',coupanController.Deletecoupan)
 
 module.exports = router;
 
