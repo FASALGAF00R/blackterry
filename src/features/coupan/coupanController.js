@@ -1,4 +1,5 @@
-const coupan=require('../coupan/coupanModel')
+const { findByIdAndDelete } = require('../user/userModel');
+const coupan=require('./coupanModel')
 // coupan managed by admin
 
 console.log(coupan,"coupannnnnnnnnnnn");
@@ -61,10 +62,13 @@ exports.Editcoupan=async(req,res)=>{
 exports.Deletecoupan=async(req,res)=>{
     try {
         const {coupanid}=req.params
-        console.log(coupanid,"coupanid");
+        const findDeleteCoupan=await coupan.findByIdAndDelete(coupanid)
 
-        const Deletecooupan= await coupan.find
-        
+        if(!findDeleteCoupan){
+        return res.status(404).json({ message: "Coupon not found" });
+        }
+
+          res.status(200).json({message: "Coupon deleted successfully",findDeleteCoupan});
         
     } catch (error) {
         console.log(error.message);
