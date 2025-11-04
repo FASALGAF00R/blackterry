@@ -34,7 +34,8 @@ const productSchema = new mongoose.Schema({
          default: 0 
         },
         offerPrice: { 
-            type: Number
+            type: Number,
+            required:true
          },
          manufacture_name :{
             type: String,

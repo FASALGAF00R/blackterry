@@ -6,6 +6,7 @@ const checkoutController=require('./checkoutController')
 router.get('/loadcheckout',checkoutController.loadcheckout)
 router.post('/applycoupan',checkoutController.Applycoupan)
 
+router.post('/placeorder',checkoutController.placeOrder)
 
 
 module.exports=router

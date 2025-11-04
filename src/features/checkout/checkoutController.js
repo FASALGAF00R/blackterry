@@ -1,13 +1,14 @@
 const User=require('../user/userModel')
 const cartModel = require('../cart/cartModel');
 const coupan =require('../coupan/coupanModel')
+const Checkout=require('../checkout/checkoutModel')
 
 exports.loadcheckout=async(req,res)=>{
     try {
         const userId=req.body
         console.log(userId,"userid");
         
-        const finduser=await cartModel.findOne(userId).populate('productId')
+        const finduser=await cartModel.findOne(userId).populate("products.productId");
         if(!finduser){
             return res.status(404).json({message:"no user found"})
         }else{
@@ -63,6 +64,61 @@ exports.Applycoupan=async (req,res)=>{
         return res.status(400).json({message:"Minimum purchase amount needed" })}
        }
       catch (error) {
+        console.log(error.message);
+        
+    }
+}
+
+
+exports.placeOrder=async(req,res)=>{
+    try {
+
+        const {userId,paymentMethod}=req.body
+
+        console.log(req.body,"oo");
+        const finusercart=await cartModel.findOne({userId}).populate("products.productId");
+
+
+        if(!finusercart){
+         return res.status(404).json({ message: "No cart found for this user" });
+        }
+
+   const products = finusercart.products.map((item) => ({
+      productId: item.productId._id,
+      quantity: item.quantity,
+      price: item.price,
+      totalPrice: item.totalPrice,
+    }));
+
+
+    const totalAmount = finusercart.cartTotal;
+
+    const newOrder = new Checkout({
+      userId,
+      products,
+      totalAmount,
+      paymentMethod,
+      status: "Pending", 
+      createdAt: new Date(),
+    });
+
+    await newOrder.save();
+
+    await cartModel.deleteOne({ userId });
+
+    res.status(201).json({
+      message: "Order placed successfully",
+      order: newOrder,
+    });
+
+   
+
+        
+
+
+        
+
+    } catch (error) {
         console.log(error.message);
         
     }

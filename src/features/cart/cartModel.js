@@ -6,6 +6,7 @@ const cartSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  products :[{
       productId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
@@ -24,8 +25,11 @@ const cartSchema = new mongoose.Schema({
     type: Number,
     default: 0
   }
-}, {
-  timestamps: true
+}],
+ cartTotal: 
+ { type: Number, 
+  default: 0 
+},
 });
 
 
