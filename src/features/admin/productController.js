@@ -1,6 +1,7 @@
 const category = require("../category/categoryModel");
 const Product = require("../products/productModel");
 
+// adminside product add
 const addProduct = async (req, res) => {
     console.log("entereddd");
     try {
@@ -9,7 +10,7 @@ const addProduct = async (req, res) => {
         const categoryExists = await category.findById(categoryid);
         console.log(categoryExists.name,"lllll");
         if (!categoryExists) {
-            return res.status(400).json({ message: "Invalid category ID" });
+            return res.status(400).json({ message: "Invalid category" });
         }
         const imagePaths = req.files.map(file => `uploads/${file.filename}`);
         const images = imagePaths;

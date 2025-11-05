@@ -73,11 +73,11 @@ exports.Applycoupan=async (req,res)=>{
 exports.placeOrder=async(req,res)=>{
     try {
 
+        // userid,productdetails,address,paymentmethod
         const {userId,paymentMethod}=req.body
 
         console.log(req.body,"oo");
         const finusercart=await cartModel.findOne({userId}).populate("products.productId");
-
 
         if(!finusercart){
          return res.status(404).json({ message: "No cart found for this user" });
@@ -99,6 +99,7 @@ exports.placeOrder=async(req,res)=>{
       totalAmount,
       paymentMethod,
       status: "Pending", 
+      finalAmount:totalAmount,
       createdAt: new Date(),
     });
 

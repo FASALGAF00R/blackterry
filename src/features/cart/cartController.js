@@ -3,8 +3,6 @@ const product = require('../products/productModel')
 const cartModel = require('../cart/cartModel');
 
 exports.addtocart = async (req, res) => {
-    console.log("entered");
-
     try {
         const { userId, productId, quantity } = req.body
         console.log(userId, "u");
@@ -17,6 +15,8 @@ exports.addtocart = async (req, res) => {
         if (!findProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
+
+        // taking product price accordingly
 
         const price = findProduct.offerPrice && findProduct.offerPrice < findProduct.actualPrice
             ? findProduct.offerPrice
@@ -44,6 +44,7 @@ exports.addtocart = async (req, res) => {
                 .status(201)
                 .json({ message: "Cart created and product added", cart: newCart });
         }
+        // checking single product  exsists in cart product
 
         const productIndex = cart.products.findIndex(
             (p) => p.productId.toString() === productId
@@ -52,9 +53,7 @@ exports.addtocart = async (req, res) => {
 
         if (productIndex !== -1) {
             cart.products[productIndex].quantity += qty;
-            cart.products[productIndex].totalPrice =
-                cart.products[productIndex].quantity *
-                cart.products[productIndex].price;
+            cart.products[productIndex].totalPrice = cart.products[productIndex].quantity * cart.products[productIndex].price;
         } else {
             cart.products.push({
                 productId,
@@ -72,7 +71,7 @@ exports.addtocart = async (req, res) => {
         await cart.save();
 
         res.status(200).json({
-            message: "Product added/updated in cart successfully",
+            message: "Product added,updated in cart successfully",
             cart,
         });
     } catch (error) {
