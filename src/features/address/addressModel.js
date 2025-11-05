@@ -17,7 +17,6 @@ const addressSchema = new mongoose.Schema({
     number: {
         type: Number,
         required: [true, "phone is required"],
-        unique: true,
     },
     address: {
         type: String,
