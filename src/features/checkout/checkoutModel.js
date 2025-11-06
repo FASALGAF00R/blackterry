@@ -4,7 +4,7 @@ const mongoose=require('mongoose')
 const addressSchema = new mongoose.Schema({
     userid:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
+        ref: 'User',
         required: true,
     },
     firstname: {
@@ -16,9 +16,8 @@ const addressSchema = new mongoose.Schema({
         required: [true, "lasname is required"],
     },
     number: {
-        type: Number,
+        type: String,
         required: [true, "phone is required"],
-        unique: true,
     },
     address: {
         type: String,
@@ -64,14 +63,12 @@ const checkoutSchema = new mongoose.Schema({
       },
       price: {
         type: Number,
-        required: true,
       },
     },
   ],
 
   totalAmount: {
     type: Number,
-    required: true,
   },
 
   discountAmount: {
@@ -86,6 +83,12 @@ const checkoutSchema = new mongoose.Schema({
 
   address :[addressSchema],
 
+  razorpayOrderId:{
+    type :String
+  },
+ razorpayPaymentId: {
+    type: String,
+  },
 
   paymentMethod: {
     type: String,

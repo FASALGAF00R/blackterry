@@ -1,11 +1,13 @@
 const express = require('express');
 const app = express();
 const path = require('path');
+const bodyParser = require("body-parser");
 
 
 // middlewares,apis,routes
 
 app.use(express.json());
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
