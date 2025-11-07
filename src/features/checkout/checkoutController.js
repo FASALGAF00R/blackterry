@@ -97,14 +97,14 @@ exports.createRazorpayOrder = async (req, res) => {
 
     const totalAmount = finusercart.cartTotal;
 
-    // ✅ Step 1: Check if there's already a pending checkout
+    // Check if there's already a pending checkout
     let existingCheckout = await Checkout.findOne({
       userId,
       paymentStatus: "Pending",
       orderStatus: "Pending",
     });
 
-    // ✅ Step 2: If found, reuse that record
+    //  Step 2: If found, reuse that record
     if (existingCheckout) {
       // Create a new Razorpay order for the same checkout
       const options = {
@@ -128,7 +128,7 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     }
 
-    // ✅ Step 3: If not found, create a new checkout
+    //  Step 3: If not found, create a new checkout
     const options = {
       amount: totalAmount * 100,
       currency: "INR",
@@ -221,7 +221,7 @@ if (!existingCheckout) {
     );
 
 
-    // await cartModel.deleteOne({ userId });
+    await cartModel.deleteOne({ userId });
 
     console.log(" Order saved successfully:", updatedCheckout);
 
@@ -238,136 +238,58 @@ if (!existingCheckout) {
 };
 
 
+exports.createCODOrder = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    console.log(req.body,"///////////////");
+    
+
+    const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
+    if (!finusercart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    const findAddress = await address.findOne({ userid: userId });
+    if (!findAddress) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    const products = finusercart.products.map((item) => ({
+      productId: item.productId._id,
+      title: item.productId.title,
+      quantity: item.quantity,
+      price: item.productId.price,
+      totalPrice: item.totalPrice,
+    }));
+
+    const checkout = new Checkout({
+      userId,
+      products,
+      finalAmount: finusercart.cartTotal,
+      paymentMethod: "COD",
+      paymentStatus: "Pending",
+      orderStatus: "Confirmed",
+      address: findAddress,
+      orderDate: new Date(),
+    });
+
+    await checkout.save();
+
+    // await cartModel.deleteOne({ userId });
+
+    res.status(200).json({
+      success: true,
+      message: "COD order placed successfully",
+      order: checkout,
+    });
+
+  } catch (error) {
+    console.error("Error creating COD order:", error);
+    res.status(500).json({ success: false, message: "Failed to create COD order" });
+  }
+};
 
 
-// exports.placeOrder = async (req, res) => {
-//     try {
-
-//         // userid,productdetails,address,paymentmethod
-//         const { userId, paymentMethod, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
-
-//         console.log(req.body, "oo");
-//         const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
-
-
-//         if (!finusercart) {
-//             return res.status(404).json({ message: "No cart found for this user" });
-//         }
-
-//         const findAddress = await address.findOne({ userid: userId })
-
-//         console.log(findAddress,"..................");
-
-
-//         const products = finusercart.products.map((item) => ({
-//             productId: item.productId._id,
-//             quantity: item.quantity,
-//             price: item.price,
-//             totalPrice: item.totalPrice,
-//         }));
-
-
-//         const totalAmount = finusercart.cartTotal;
-//         // for cod
-
-
-//       if (paymentMethod === "COD") {
-
-//         const newOrder = new Checkout({
-//             userId,
-//             products,
-//             totalAmount,
-//             paymentMethod,
-//             status: "Pending",
-//             finalAmount: totalAmount,
-//             createdAt: new Date(),
-//             address: [findAddress]
-//         });
-
-//         await newOrder.save();
-
-//         // await cartModel.deleteOne({ userId });
-
-//         res.status(201).json({
-//             message: "Order placed successfully",
-//             order: newOrder,
-//         });
-
-
-//     }
-
-
-//         // razorpayment starting
-
-
-//         if (paymentMethod === "Razorpay" && !razorpay_payment_id) {
-//             const options = {
-//                 amount: totalAmount * 100,
-//                 currency: "INR",
-//                 receipt: `order_rcptid_${userId}`,
-//             };
-
-
-//             const order = await razorpayInstance.orders.create(options);
-//             console.log(order,"order");
-
-//             return res.status(200).json({
-//                 success: true,
-//                 message: "Razorpay order created successfully",
-//                 razorpayOrderId: order.id,
-//                 amount: order.amount,
-//                 currency: order.currency,
-//             });
-//         }
-
-//         // got the ids needed for payment
-
-//         console.log(razorpay_payment_id, "razorpay_payment_id");
-//         console.log(razorpay_order_id,"razorpay_order_id");
-//         console.log(razorpay_signature,"razorpay_signature");
-
-//         if (paymentMethod === "Razorpay" && razorpay_payment_id && razorpay_signature) {
-//             const sign = razorpay_order_id + "|" + razorpay_payment_id;
-//             const expectedSign = crypto
-//                 .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-//                 .update(sign.toString())
-//                 .digest("hex");
-
-//             if (expectedSign === razorpay_signature) {
-//                 const newOrder = new Checkout({
-//                     userId,
-//                     products,
-//                     totalAmount,
-//                     finalAmount: totalAmount,
-//                     paymentMethod: "Razorpay",
-//                     paymentStatus: "Paid",
-//                     orderStatus: "Confirmed",
-//                     address: [findAddress],
-//                 });
-
-//                 await newOrder.save();
-
-//                 console.log(newOrder,"neworder");
-
-//                 // await cartModel.deleteOne({ userId });
-
-//                 return res.status(200).json({
-//                     success: true,
-//                     message: "Payment verified and order placed successfully",
-//                     order: newOrder,
-//                 });
-//             } else {
-//                 return res.status(400).json({ success: false, message: "Invalid payment signature" });
-//             }
-//         }
-
-//         return res.status(400).json({ message: "Invalid payment method or missing Razorpay details" });
-
-//     } catch (error) {
-//         console.log(error.message);
-
-//     }
-// }
 
 
 
