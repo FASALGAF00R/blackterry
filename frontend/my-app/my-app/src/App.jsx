@@ -45,11 +45,11 @@ function App() {
       // Razorpay options
       const options = {
         key: "rzp_test_Rc23zKSi6P5WfQ",
-        amount: data.amount,
+        amount: data.finalAmount,
         currency: data.currency,
-        name: "Your Company Name",
+        name: "blackterry",
         description: "Test Transaction",
-        order_id: data.id,
+        order_id: data.razorpayOrderId,
         handler: function (response) {
           console.log("Payment Success:", response);
           alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);

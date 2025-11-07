@@ -1,47 +1,5 @@
 const mongoose=require('mongoose')
 
-
-const addressSchema = new mongoose.Schema({
-    userid:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-    },
-    firstname: {
-        type: String,
-        required: [true,"firstname is required"],
-    },
-    lastname: {
-        type: String,
-        required: [true, "lasname is required"],
-    },
-    number: {
-        type: String,
-        required: [true, "phone is required"],
-    },
-    address: {
-        type: String,
-        required: [true, "address is required"]
-    },
-    city: {
-        type: String,
-        required: [true, "City is required"],
-    },
-    state: {
-        type: String,
-        required: [true, "State is required"],
-    },
-    country: {
-        type: String,
-        required: [true, "Country is required"],
-    },
-
-});
-
-
-
-
-
 const checkoutSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -61,14 +19,17 @@ const checkoutSchema = new mongoose.Schema({
         required: true,
         default: 1,
       },
-      price: {
-        type: Number,
-      },
+
+     totalPrice: { type: Number },
     },
   ],
 
   totalAmount: {
     type: Number,
+  },
+  address:{
+    type:Object,
+    
   },
 
   discountAmount: {
@@ -80,8 +41,6 @@ const checkoutSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-
-  address :[addressSchema],
 
   razorpayOrderId:{
     type :String
@@ -112,6 +71,9 @@ const checkoutSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  paymentDate :{
+    type:Date,
+  }
 });
 
 module.exports = mongoose.model("Checkout", checkoutSchema);
