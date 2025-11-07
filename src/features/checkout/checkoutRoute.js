@@ -7,9 +7,9 @@ router.get('/loadcheckout',checkoutController.loadcheckout)
 router.post('/applycoupan',checkoutController.Applycoupan)
 
 // router.post('/placeorder',checkoutController.)
-// router.post("/verifypayment", checkoutController.verifyRazorpayPayment);
+router.post("/verifypayment", checkoutController.verifyRazorpayPayment);
 router.post("/createorder", checkoutController.createRazorpayOrder);
-router.post('/webhook',express.raw({ type: "application/json" }),checkoutController.razorpayWebhook)
+// router.post('/webhook',express.raw({ type: "application/json" }),checkoutController.razorpayWebhook)
 
 
 module.exports=router

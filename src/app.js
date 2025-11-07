@@ -2,9 +2,11 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
 
 // middlewares,apis,routes
+app.use(cors());
 
 app.use(express.json());
 app.use(bodyParser.json());
