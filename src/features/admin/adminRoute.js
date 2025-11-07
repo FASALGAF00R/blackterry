@@ -5,6 +5,7 @@ const userManagementController = require('./userManagementController');
 const categoryController = require('./categoryController');
 const productController  = require('./productController');
 const coupanController =require('../coupan/coupanController')
+const OrderController=require('../admin/orderController')
 
 router.get('/getusers', userManagementController.getAllUsers);
 router.patch('/block/:userid',userManagementController.blockuser)
@@ -18,6 +19,10 @@ router.post('/addcoupan',coupanController.Addcoupan)
 
 router.put('/editcoupan/:coupanid',coupanController.Editcoupan)
 router.delete('/deletecoupan/:coupanid',coupanController.Deletecoupan)
+
+router.get('/orders',OrderController.vieworders)
+router.get('/getsingleorders/:orderid',OrderController.getSingleorder)
+
 
 module.exports = router;
 
