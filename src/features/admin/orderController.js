@@ -3,14 +3,15 @@ const Checkout=require('../checkout/checkoutModel');
 exports.vieworders=async(req,res)=>{
     try {
         const {orderStatus,limit,page}=req.query
-        console.log(orderStatus,limit,page,"orderStatus");
-
         const filter=orderStatus ?  {orderStatus:orderStatus} : {}
-        const findstatus=await Checkout.find(filter).sort({orderDate:-1}).skip(page).limit(parseInt(limit))
-        console.log(findstatus,"klklk");
-         res.status(200).json({message:"done",findstatus})
-        const Allorders=await Checkout.find({})       
-        return res.status(200).json({message:"sended all orders",Allorders})
+
+        const pagenumber=parseInt(page) || 1
+        const limitnumber=parseInt(limit) || 1
+        
+        const filteredproducts=await Checkout.find(filter).sort({orderDate:-1}).skip(pagenumber-1*(limitnumber)).limit(limitnumber)
+        
+        const totalOrders = await Checkout.countDocuments(filter);
+        return res.status(200).json({message:"sended all orders",orders:filteredproducts,totalOrders})
     } catch (error) {
         console.log(error.message);
         

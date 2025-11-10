@@ -4,12 +4,11 @@ const cartModel = require('../cart/cartModel');
 
 exports.addtocart = async (req, res) => {
     try {
-        const { userId, productId, quantity } = req.body
+        const { userId, productId,  } = req.body
         console.log(userId, "u");
         console.log(productId, "p");
-        console.log(quantity, "q");
 
-        const qty = quantity || 1;
+        const qty =  1;
 
         const findProduct = await product.findById(productId);
         if (!findProduct) {
@@ -24,6 +23,9 @@ exports.addtocart = async (req, res) => {
 
 
         let cart = await cartModel.findOne({ userId });
+        console.log(cart,"cart");
+        
+        const totalPrice=qty * price
 
         if (!cart) {
             const newCart = new cartModel({
@@ -33,18 +35,18 @@ exports.addtocart = async (req, res) => {
                         productId,
                         quantity: qty,
                         price,
-                        totalPrice: qty * price,
+                        totalPrice,
                     },
                 ],
-                cartTotal: qty * price, 
+                cartTotal: totalPrice, 
             });
 
+            console.log("ethii");
             await newCart.save();
-            return res
-                .status(201)
-                .json({ message: "Cart created and product added", cart: newCart });
+            
+            return res.status(201).json({ message: "Cart created and product added", cart: newCart });
         }
-        // checking single product  exsists in cart product
+        // checking single product  exsits in cart product
 
         const productIndex = cart.products.findIndex(
             (p) => p.productId.toString() === productId
@@ -59,7 +61,7 @@ exports.addtocart = async (req, res) => {
                 productId,
                 quantity: qty,
                 price,
-                totalPrice: qty * price,
+                totalPrice,
             });
         }
 
@@ -107,15 +109,12 @@ exports.updatecart = async (req, res) => {
         ? productData.offerPrice
         : productData.actualPrice;
 
-    // ✅ Add quantity instead of replacing
     cart.products[productIndex].quantity += quantity;
 
-    // Update price and total
     cart.products[productIndex].price = price;
     cart.products[productIndex].totalPrice =
       cart.products[productIndex].quantity * price;
 
-    // ✅ Recalculate cart total
     cart.cartTotal = cart.products.reduce((sum, item) => sum + item.totalPrice, 0);
 
     await cart.save();

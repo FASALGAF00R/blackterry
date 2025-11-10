@@ -3,7 +3,6 @@ import { useState } from 'react';
 function App() {
   const [loading, setLoading] = useState(false);
 
-  // Function to load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
@@ -14,7 +13,6 @@ function App() {
     });
   };
 
-  // Function to handle payment
   const handlePayment = async () => {
     setLoading(true);
 
@@ -26,17 +24,17 @@ function App() {
     }
 
     try {
-      // Call your backend to create Razorpay order
+      // Calling backend to create razorpay order
       const orderResponse = await fetch("http://localhost:3000/api/checkout/createorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "6902e2fe4a97d83ba072425c" })
+        body: JSON.stringify({ userId: "6905e7af5de92c6bbf11b0da" })
       });
 
       const data = await orderResponse.json();
       console.log(data,".............");
       
-      if (!data?.razorpayOrderId) {
+      if (!data) {
         alert("Server error. Cannot create order.");
         setLoading(false);
         return;

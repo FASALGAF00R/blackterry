@@ -12,7 +12,7 @@ exports.loadcheckout = async (req, res) => {
     console.log(userId, "userid");
 
     const finduser = await cartModel.findOne(userId).populate("products.productId");
-    if (!finduser) {
+    if (!finduser) { 
       return res.status(404).json({ message: "no user found" })
     } else {
       res.json({ message: "cart items", cartitems: finduser })
@@ -97,14 +97,12 @@ exports.createRazorpayOrder = async (req, res) => {
 
     const totalAmount = finusercart.cartTotal;
 
-    // Check if there's already a pending checkout
     let existingCheckout = await Checkout.findOne({
       userId,
       paymentStatus: "Pending",
       orderStatus: "Pending",
     });
 
-    //  Step 2: If found, reuse that record
     if (existingCheckout) {
       // Create a new Razorpay order for the same checkout
       const options = {
@@ -275,7 +273,7 @@ exports.createCODOrder = async (req, res) => {
 
     await checkout.save();
 
-    // await cartModel.deleteOne({ userId });
+    await cartModel.deleteOne({ userId });
 
     res.status(200).json({
       success: true,
@@ -290,60 +288,3 @@ exports.createCODOrder = async (req, res) => {
 };
 
 
-
-
-
-
-// exports.razorpayWebhook = async (req, res) => {
-//   try {
-
-//     const secret = process.env.RAZORPAY_WEBHOOK_SECRET
-//     console.log(secret, "secret");
-
-//         const signature = req.headers["x-razorpay-signature"];
-
-//         if(signature){
-          
-//               const shasum = crypto.createHmac("sha256", secret)
-//               .update(req.body).digest("hex")
-//         }
-
-
-
-//     if (shasum !== signature) {
-//         return res.status(400).json({ success: false, message: "Invalid signature" });
-//     }else{
-//         console.log("No signature provided — skipping verification for testing");  
-//     }
-
-//     // const event = req.body.event;
-
-//     // if (event === "payment.captured") {
-//     //   const payment = req.body.payload.payment.entity;
-//     //   console.log("Payment captured:", payment);
-
-//     //   const orderId = payment.order_id;
-//     //   const paymentId = payment.id;
-//     //   const amount = payment.amount / 100;
-
-
-//     const payload = JSON.parse(req.body.toString());
-//     const payment = payload.payload.payment.entity;
-
-
-//       await Checkout.findByIdAndUpdate(payment.notes.checkoutId, {
-//       paymentStatus: "Paid",
-//       razorpayPaymentId: payment.id,
-//       orderStatus: "Confirmed",
-//     });
-
-//         res.status(200).json({ success: true });
-
-//   } catch (error) {
-//     console.error(" Error in Razorpay webhook:", error.message);
-
-//   }
-// }
-
-
-// skipped signature
