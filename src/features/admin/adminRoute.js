@@ -22,7 +22,7 @@ router.delete('/deletecoupan/:coupanid',coupanController.Deletecoupan)
 
 router.get('/orders',OrderController.vieworders)
 router.get('/getsingleorders/:orderid',OrderController.getSingleorder)
-
+router.put('/updateorder',OrderController.Orderstatus)
 
 module.exports = router;
 
