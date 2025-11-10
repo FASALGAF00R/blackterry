@@ -5,6 +5,8 @@ const Checkout = require('../checkout/checkoutModel')
 const address = require('../address/addressModel')
 const crypto = require("crypto");
 const razorpayInstance = require('../../../config/razorpayInstance')
+const  generateInvoice  = require('../../../config/generateInvoice');
+
 
 exports.loadcheckout = async (req, res) => {
   try {
@@ -12,7 +14,7 @@ exports.loadcheckout = async (req, res) => {
     console.log(userId, "userid");
 
     const finduser = await cartModel.findOne(userId).populate("products.productId");
-    if (!finduser) { 
+    if (!finduser) {
       return res.status(404).json({ message: "no user found" })
     } else {
       res.json({ message: "cart items", cartitems: finduser })
@@ -173,50 +175,50 @@ exports.verifyRazorpayPayment = async (req, res) => {
   try {
     const {
       userId,
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
     } = req.body;
 
     console.log(req.body, ".................................");
 
 
     // Verify payment signature
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const sign = razorpayOrderId + "|" + razorpayPaymentId;
     const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(sign.toString())
       .digest("hex");
 
-    if (expectedSign !== razorpay_signature) {
+    if (expectedSign !== razorpaySignature) {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
 
     const findAddress = await address.findOne({ userid: userId });
-    if (!findAddress){
-    return res.status(404).json({ message: "Address not found" });
-    } 
+    if (!findAddress) {
+      return res.status(404).json({ message: "Address not found" });
+    }
 
     const existingCheckout = await Checkout.findOne({ razorpayOrderId: razorpay_order_id });
-if (!existingCheckout) {
-  return res.status(404).json({ success: false, message: "Checkout order not found" });
-}
+    if (!existingCheckout) {
+      return res.status(404).json({ success: false, message: "Checkout order not found" });
+    }
 
 
 
     const updatedCheckout = await Checkout.findOneAndUpdate(
-      { razorpayOrderId: razorpay_order_id },
+      { razorpayOrderId: razorpayOrderId },
       {
         $set: {
-          razorpayPaymentId: razorpay_payment_id,
+          razorpayPaymentId: razorpayPaymentId,
           paymentStatus: "Paid",
           orderStatus: "Confirmed",
-          address: findAddress, 
+          address: findAddress,
           paymentDate: new Date(),
         },
       },
-      { new: true } 
-    );
+      { new: true }
+    ).populate("products.productId");
 
 
     await cartModel.deleteOne({ userId });
@@ -229,6 +231,20 @@ if (!existingCheckout) {
       order: updatedCheckout,
     });
 
+    const doc = generateInvoice(updatedCheckout);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=invoice_${updatedCheckout._id}.pdf`
+    );
+
+    doc.pipe(res);
+
+
+
+
+
   } catch (error) {
     console.error("Error verifying Razorpay payment:", error);
     res.status(500).json({ success: false, message: "Payment verification failed" });
@@ -239,8 +255,8 @@ if (!existingCheckout) {
 exports.createCODOrder = async (req, res) => {
   try {
     const { userId } = req.body;
-    console.log(req.body,"///////////////");
-    
+    console.log(req.body, "///////////////");
+
 
     const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
     if (!finusercart) {
@@ -288,3 +304,25 @@ exports.createCODOrder = async (req, res) => {
 };
 
 
+exports.downloadinvoice = async (req, res) => {
+  try {
+    const order = await Checkout.findById(req.params.orderId).populate("products.productId");
+    const user = await User.findById(order.userId);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.paymentStatus !== "Paid")
+      return res.status(400).json({ message: "Payment not completed" });
+
+    const doc = generateInvoice(order,user);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=invoice_${order._id}.pdf`
+    );
+    doc.pipe(res);
+    doc.end()
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error generating invoice" });
+  }
+};

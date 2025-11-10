@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -24,33 +24,72 @@ function App() {
     }
 
     try {
-      // Calling backend to create razorpay order
-      const orderResponse = await fetch("http://localhost:3000/api/checkout/createorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "6905e7af5de92c6bbf11b0da" })
-      });
+      // Step 1: Create Razorpay order via backend
+      const orderResponse = await fetch(
+        "http://localhost:3000/api/checkout/createorder",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: "6905e7af5de92c6bbf11b0da" }),
+        }
+      );
 
       const data = await orderResponse.json();
-      console.log(data,".............");
-      
-      if (!data) {
+      console.log("Order created:", data);
+
+      if (!data || !data.razorpayOrderId) {
         alert("Server error. Cannot create order.");
         setLoading(false);
         return;
       }
 
-      // Razorpay options
+      // Step 2: Set Razorpay options
       const options = {
         key: "rzp_test_Rc23zKSi6P5WfQ",
         amount: data.finalAmount,
         currency: data.currency,
         name: "blackterry",
-        description: "Test Transaction",
+        description: "Purchase",
         order_id: data.razorpayOrderId,
-        handler: function (response) {
-          console.log("Payment Success:", response);
-          alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+        handler: async function (response) {
+          console.log("Payment success:", response);
+
+          // Step 3: Verify payment and generate invoice
+          try {
+            const verifyResponse = await fetch(
+              "http://localhost:3000/api/checkout/verifypayment",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (verifyResponse.ok) {
+              // Step 4: Get PDF as blob and trigger download
+              const blob = await verifyResponse.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "invoice.pdf";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+
+              alert("Payment verified ✅ and Invoice downloaded!");
+            } else {
+              const err = await verifyResponse.json();
+              console.error("Verification failed:", err);
+              alert("Payment verified failed!");
+            }
+          } catch (verifyError) {
+            console.error("Error verifying payment:", verifyError);
+            alert("Something went wrong during verification!");
+          }
         },
         prefill: {
           name: "John Doe",
@@ -65,7 +104,6 @@ function App() {
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
       setLoading(false);
-
     } catch (err) {
       console.error(err);
       alert("Something went wrong!");
