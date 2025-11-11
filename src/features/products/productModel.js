@@ -50,6 +50,9 @@ const productSchema = new mongoose.Schema({
             type: Number,
              default: 0 
             },
+            is_block :{
+                type:Boolean
+            }
 })
 const Product = mongoose.model('Product', productSchema);
 

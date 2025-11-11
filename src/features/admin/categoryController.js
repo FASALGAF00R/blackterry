@@ -26,7 +26,45 @@ const editCategory = async (req, res) => {
 
 }
 
+
+
+const blockcategory=async(req,res)=>{
+    try {
+        const catid=req.params.catid
+        console.log(catid,"...");
+        
+        const findcat=await categoryModel.findByIdAndUpdate(catid,{is_block:true},{new:true})
+         res.status(200).json({message:"category blocked",findcat});
+
+        
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+}
+
+
+const unblockcategory=async(req,res)=>{
+    try {
+        const catid=req.params.catid
+        console.log(catid,"...");
+        
+        const findcat=await categoryModel.findByIdAndUpdate(catid,{is_block:false},{new:true})
+         res.status(200).json({message:"category unblocked",findcat});
+
+        
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+}
+
+
+
+
     module.exports = {  
     addCategory,
-    editCategory
+    editCategory,
+    blockcategory,
+    unblockcategory
     }

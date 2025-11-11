@@ -22,9 +22,9 @@ const couponSchema = mongoose.Schema({
         type: Number,
 
     },
-    status: {
+    is_block: {
         type: Boolean,
-        default: true
+        default: false
     },
 })
 

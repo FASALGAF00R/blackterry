@@ -49,8 +49,38 @@ const addProduct = async (req, res) => {
     }
 }
 
+
+const blockproduct=async(req,res)=>{
+    try {
+        const id=req.params.id
+        const findproduct=await Product.findByIdAndUpdate(id,{is_block:true},{new:true})
+                res.status(200).json({message:"product blocked",findproduct});
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+}
+
+
+
+const unblockproduct=async(req,res)=>{
+    try {
+        const id=req.params.id
+        const findproduct=await Product.findByIdAndUpdate(id,{is_block:false},{new:true})
+                res.status(200).json({message:"product unblocked",findproduct});
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+}
+
+
+
+
 module.exports = {
-    addProduct
+    addProduct,
+    blockproduct,
+    unblockproduct
 };
 
 

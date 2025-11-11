@@ -75,3 +75,32 @@ exports.Deletecoupan=async(req,res)=>{
         
     }
 }
+
+
+
+exports.blockcoupan=async(req,res)=>{
+    try {
+            const id =req.params.id
+            const findcoupan=await coupan.findByIdAndUpdate(id,{is_block:true},{new:true})
+           res.status(200).json({message:"coupan blocked",findcoupan});
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+    
+}
+
+
+exports.unblockcoupan=async(req,res)=>{
+    try {
+            const id =req.params.id
+             const findcoupan=await coupan.findByIdAndUpdate(id,{is_block:false},{new:true})
+           res.status(200).json({message:"coupan unblocked",findcoupan});    
+            
+        
+    } catch (error) {
+        console.log(error.message);
+        
+    }
+    
+}
