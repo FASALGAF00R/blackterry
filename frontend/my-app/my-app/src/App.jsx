@@ -24,13 +24,12 @@ function App() {
     }
 
     try {
-      // Step 1: Create Razorpay order via backend
       const orderResponse = await fetch(
         "http://localhost:3000/api/checkout/createorder",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: "6905e7af5de92c6bbf11b0da" }),
+          body: JSON.stringify({ userId: "6902e2fe4a97d83ba072425c" }),
         }
       );
 
@@ -43,7 +42,6 @@ function App() {
         return;
       }
 
-      // Step 2: Set Razorpay options
       const options = {
         key: "rzp_test_Rc23zKSi6P5WfQ",
         amount: data.finalAmount,
@@ -54,7 +52,6 @@ function App() {
         handler: async function (response) {
           console.log("Payment success:", response);
 
-          // Step 3: Verify payment and generate invoice
           try {
             const verifyResponse = await fetch(
               "http://localhost:3000/api/checkout/verifypayment",
@@ -62,6 +59,7 @@ function App() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                  userId: "6902e2fe4a97d83ba072425c",
                   razorpayOrderId: response.razorpay_order_id,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature,
@@ -70,17 +68,23 @@ function App() {
             );
 
             if (verifyResponse.ok) {
-              // Step 4: Get PDF as blob and trigger download
-              const blob = await verifyResponse.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "invoice.pdf";
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-
-              alert("Payment verified ✅ and Invoice downloaded!");
+              const verifyData = await verifyResponse.json();
+              const invoiceResponse = await fetch(
+                `http://localhost:3000/api/checkout/invoice/${verifyData.order._id}`
+              );
+              if (invoiceResponse.ok) {
+                const blob = await invoiceResponse.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `invoice_${verifyData.order._id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                alert("Payment verified and invoice downloaded!");
+              }else{
+                alert('Invoice generation failed!')
+              }
             } else {
               const err = await verifyResponse.json();
               console.error("Verification failed:", err);

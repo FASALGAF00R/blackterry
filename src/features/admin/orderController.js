@@ -1,4 +1,6 @@
 const Checkout=require('../checkout/checkoutModel');
+const Product = require("../products/productModel");
+
 
 exports.vieworders=async(req,res)=>{
     try {
@@ -62,8 +64,18 @@ exports.Orderstatus=async(req,res)=>{
 
         const Updatingorders=await Checkout.updateOne({_id:orderid},{$set:{orderStatus:orderStatus,paymentStatus: paymentStatus}})
         console.log(Updatingorders,"updatingorderstatus");
-        
 
+        const Findproduct=await Checkout.findById({_id:orderid}).populate("products.productId")
+        console.log(Findproduct,"llll");
+        
+        if(orderStatus==="Delivered" && paymentStatus==="Paid"){
+            for(const item of Findproduct.products){
+                const productid=item.productId
+                const qty=item.quantity
+
+                await Product.updateOne({_id:productid},{$inc:{totalStock:-qty}})
+            } 
+        }
          res.status(200).json({message:"order status updated"})
 
         if(Updatingorders.matchedCount ===0){

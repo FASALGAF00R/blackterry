@@ -6,6 +6,7 @@ const address = require('../address/addressModel')
 const crypto = require("crypto");
 const razorpayInstance = require('../../../config/razorpayInstance')
 const generateInvoice = require('../../../config/generateInvoice');
+const Product = require("../products/productModel");
 
 
 exports.loadcheckout = async (req, res) => {
@@ -89,8 +90,12 @@ exports.Applycoupan = async (req, res) => {
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const { userId } = req.body;
+    console.log(userId, "klkl");
+
 
     const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
+    console.log(finusercart, "m");
+
     if (!finusercart) {
       return res.status(404).json({ message: "No cart found for this user" });
     }
@@ -180,7 +185,6 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     console.log(req.body, ".................................");
 
-
     // Verify payment signature
     const sign = razorpayOrderId + "|" + razorpayPaymentId;
     const expectedSign = crypto
@@ -193,54 +197,42 @@ exports.verifyRazorpayPayment = async (req, res) => {
     }
 
     const findAddress = await address.findOne({ userid: userId });
+    console.log(findAddress,"............");
+    
     if (!findAddress) {
       return res.status(404).json({ message: "Address not found" });
     }
 
-    const existingCheckout = await Checkout.findOne({ razorpayOrderId: razorpay_order_id });
+    const existingCheckout = await Checkout.findOne({ razorpayOrderId: razorpayOrderId }).populate("products.productId");
     if (!existingCheckout) {
       return res.status(404).json({ success: false, message: "Checkout order not found" });
     }
 
 
 
-    const updatedCheckout = await Checkout.findOneAndUpdate(
-      { razorpayOrderId: razorpayOrderId },
-      {
-        $set: {
-          razorpayPaymentId: razorpayPaymentId,
-          paymentStatus: "Paid",
-          orderStatus: "Confirmed",
-          address: findAddress,
-          paymentDate: new Date(),
-        },
-      },
-      { new: true }
-    ).populate("products.productId");
+      existingCheckout.paymentStatus = "Paid";
+      existingCheckout.orderStatus = "Confirmed";
+      existingCheckout.razorpayPaymentId = razorpayPaymentId;
+      existingCheckout.address = findAddress;
+      existingCheckout.paymentDate = new Date();
 
+      await existingCheckout.save();
+
+      for (const item of existingCheckout.products) {
+        await Product.updateOne(
+          { _id: item.productId },
+          { $inc: { totalStock: -item.quantity } }
+        );
+      }
 
     await cartModel.deleteOne({ userId });
 
-    console.log(" Order saved successfully:", updatedCheckout);
 
-    res.status(200).json({
+     return res.status(200).json({
       success: true,
-      message: "Payment verified and order placed successfully",
-      order: updatedCheckout,
+      message: "Payment verified successfully",
+      order: existingCheckout,
     });
-
-    const doc = generateInvoice(updatedCheckout);
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=invoice_${updatedCheckout._id}.pdf`
-    );
-
-    doc.pipe(res);
-
-
-
 
 
   } catch (error) {
@@ -253,10 +245,8 @@ exports.verifyRazorpayPayment = async (req, res) => {
 exports.createCODOrder = async (req, res) => {
   try {
     const { userId } = req.body;
-
-
     const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
-    
+
     if (!finusercart) {
       return res.status(404).json({ message: "Cart not found" });
     }
@@ -274,7 +264,7 @@ exports.createCODOrder = async (req, res) => {
       totalPrice: item.totalPrice,
     }));
 
-    
+
 
     const checkout = new Checkout({
       userId,
@@ -304,30 +294,23 @@ exports.createCODOrder = async (req, res) => {
 };
 
 
-exports.downloadinvoice = async (req, res) => {
+exports.downloadinvoice  = async (req, res) => {
   try {
-    const order = await Checkout.findById(req.params.orderId).populate("products.productId");
+    const { orderId } = req.params;
+    const order = await Checkout.findById(orderId).populate("products.productId");
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-    if (order.paymentStatus !== "Paid")
-      return res.status(400).json({ message: "Payment not completed" });
-    const user = await User.findById(order.userId);
+    const doc = generateInvoice(order);
 
-    if (!user) {
-      return res.status(404).json({ message: "user not found" });
-    }
-    const doc = generateInvoice(order, user);
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=invoice_${order._id}.pdf`
     );
     doc.pipe(res);
-    doc.end()
+    doc.end();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error generating invoice" });
+    console.error("Error generating invoice:", err);
+    res.status(500).json({ success: false, message: "Failed to generate invoice" });
   }
 };
