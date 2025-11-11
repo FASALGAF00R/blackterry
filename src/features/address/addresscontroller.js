@@ -1,10 +1,9 @@
-const e = require('express');
+const express = require('express');
 const Address=require('./addressModel');
 
 const addaddress=async(req,res)=>{
     try {
         const {userid,firstname,lastname,number,address,city,state,country}=req.body; 
-        console.log(userid,"oooooo");
         const newaddress=new Address({
             userid,
             firstname,
@@ -24,13 +23,10 @@ const addaddress=async(req,res)=>{
 
 const getspecificaddress=async(req,res)=>{
     try {
-        console.log("enteredddddd");
         
         const addressid=req.params.id;
-        console.log(addressid,"lllllll");
         
         const address=await Address.find({userid:addressid});
-        console.log(address,"......");
         
         if(!address){
             return res.status(404).json({message:"Address not found"});
@@ -46,7 +42,6 @@ const updateaddress=async(req,res)=>{
     try {
         const addressid=req.params.id;
         const updatedaddress=req.body;
-        console.log(updateaddress,"...........");
         
         const addressupdate=await Address.findByIdAndUpdate(addressid,{$set:updatedaddress},{new:true})
         if(!addressupdate){
@@ -65,7 +60,6 @@ const updateaddress=async(req,res)=>{
 
 const deleteaddress=async(req,res)=>{
     try {
-        console.log("ethiiiiiiiiiiiiiiii");
         const id=req.params.id
         
         const Deleteuser=await Address.findByIdAndDelete(id)

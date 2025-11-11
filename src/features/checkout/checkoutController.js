@@ -5,7 +5,7 @@ const Checkout = require('../checkout/checkoutModel')
 const address = require('../address/addressModel')
 const crypto = require("crypto");
 const razorpayInstance = require('../../../config/razorpayInstance')
-const  generateInvoice  = require('../../../config/generateInvoice');
+const generateInvoice = require('../../../config/generateInvoice');
 
 
 exports.loadcheckout = async (req, res) => {
@@ -19,7 +19,6 @@ exports.loadcheckout = async (req, res) => {
     } else {
       res.json({ message: "cart items", cartitems: finduser })
     }
-    console.log(finduser, 'jjjjjjjjjjjjj');
 
   } catch (error) {
     console.log(error.message);
@@ -31,7 +30,6 @@ exports.loadcheckout = async (req, res) => {
 exports.Applycoupan = async (req, res) => {
   try {
     // discount needed to calculate
-    console.log("apply coupan");
     const { userId, couponcode, Cartamount } = req.body
     console.log(userId, "userid");
     console.log(couponcode, "coupancode");
@@ -255,10 +253,10 @@ exports.verifyRazorpayPayment = async (req, res) => {
 exports.createCODOrder = async (req, res) => {
   try {
     const { userId } = req.body;
-    console.log(req.body, "///////////////");
 
 
     const finusercart = await cartModel.findOne({ userId }).populate("products.productId");
+    
     if (!finusercart) {
       return res.status(404).json({ message: "Cart not found" });
     }
@@ -272,9 +270,11 @@ exports.createCODOrder = async (req, res) => {
       productId: item.productId._id,
       title: item.productId.title,
       quantity: item.quantity,
-      price: item.productId.price,
+      price: item.price,
       totalPrice: item.totalPrice,
     }));
+
+    
 
     const checkout = new Checkout({
       userId,
@@ -307,13 +307,18 @@ exports.createCODOrder = async (req, res) => {
 exports.downloadinvoice = async (req, res) => {
   try {
     const order = await Checkout.findById(req.params.orderId).populate("products.productId");
-    const user = await User.findById(order.userId);
 
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
     if (order.paymentStatus !== "Paid")
       return res.status(400).json({ message: "Payment not completed" });
+    const user = await User.findById(order.userId);
 
-    const doc = generateInvoice(order,user);
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
+    const doc = generateInvoice(order, user);
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",

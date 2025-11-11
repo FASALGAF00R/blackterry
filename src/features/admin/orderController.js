@@ -57,10 +57,10 @@ exports.getSingleorder=async(req,res)=>{
 
 exports.Orderstatus=async(req,res)=>{
     try {
-        const {orderid,orderStatus}=req.body
+        const {orderid,orderStatus,paymentStatus}=req.body
         console.log(req.body,"iddddddddddd");
 
-        const Updatingorders=await Checkout.updateOne({_id:orderid},{$set:{orderStatus:orderStatus}})
+        const Updatingorders=await Checkout.updateOne({_id:orderid},{$set:{orderStatus:orderStatus,paymentStatus: paymentStatus}})
         console.log(Updatingorders,"updatingorderstatus");
         
 
