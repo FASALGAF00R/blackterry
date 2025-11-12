@@ -4,17 +4,15 @@ const cartModel = require('../cart/cartModel');
 
 exports.addtocart = async (req, res) => {
     try {
-        const { userId, productId,  } = req.body
+        const { userId, productId } = req.body
         console.log(userId, "u");
         console.log(productId, "p");
 
-        const qty =  1;
-
+        const qty = 1;
         const findProduct = await product.findById(productId);
         if (!findProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
-
         // taking product price accordingly
 
         const price = findProduct.offerPrice && findProduct.offerPrice < findProduct.actualPrice
@@ -23,9 +21,7 @@ exports.addtocart = async (req, res) => {
 
 
         let cart = await cartModel.findOne({ userId });
-        console.log(cart,"cart");
-        
-        const totalPrice=qty * price
+        const totalPrice = qty * price
 
         if (!cart) {
             const newCart = new cartModel({
@@ -38,14 +34,14 @@ exports.addtocart = async (req, res) => {
                         totalPrice,
                     },
                 ],
-                cartTotal: totalPrice, 
+                cartTotal: totalPrice,
             });
 
-            console.log("ethii");
             await newCart.save();
-            
+
             return res.status(201).json({ message: "Cart created and product added", cart: newCart });
         }
+
         // checking single product  exsits in cart product
 
         const productIndex = cart.products.findIndex(
@@ -86,47 +82,61 @@ exports.addtocart = async (req, res) => {
 
 
 exports.updatecart = async (req, res) => {
-  try {
-    const { userId, productId, quantity } = req.body;
+    try {
+        const { userId, productId, quantity } = req.body;
 
-    const cart = await cartModel.findOne({ userId }).populate("products.productId");
-    if (!cart) {
-      return res.status(400).json({ message: "Cart not found" });
+
+        if(typeof quantity=== "number"){
+            return res.status(400).json({message:"invalid quantity"})
+
+        }
+
+        const cart = await cartModel.findOne({ userId }).populate("products.productId");
+        if (!cart) {
+            return res.status(400).json({ message: "Cart not found" });
+        }
+
+        const productIndex = cart.products.findIndex(
+            (p) => p.productId._id.toString() === productId
+        );
+
+        if (productIndex === -1) {
+            return res.status(404).json({ message: "Product not found in cart" });
+        }
+
+        const productData = cart.products[productIndex].productId;
+
+        const price =
+            productData.offerPrice && productData.offerPrice < productData.actualPrice
+                ? productData.offerPrice
+                : productData.actualPrice;
+
+        cart.products[productIndex].quantity += quantity;
+
+
+        if (cart.products[productIndex].quantity < 1) {
+            cart.products.splice(productIndex, 1)
+        }else{
+            cart.products[productIndex].price = price;
+            cart.products[productIndex].totalPrice =
+                cart.products[productIndex].quantity * price;
+        }
+
+
+        cart.cartTotal = cart.products.reduce((sum, item) => sum + item.totalPrice, 0);
+
+        await cart.save();
+
+        const message=quantity > 0 ? "cart updated successfully quantity increased":"Cart updated successfully (quantity decreased or item removed)"
+
+        res.status(200).json({
+            message,
+            cart,
+        });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: "Something went wrong" });
     }
-
-    const productIndex = cart.products.findIndex(
-      (p) => p.productId._id.toString() === productId
-    );
-
-    if (productIndex === -1) {
-      return res.status(404).json({ message: "Product not found in cart" });
-    }
-
-    const productData = cart.products[productIndex].productId;
-
-    const price =
-      productData.offerPrice && productData.offerPrice < productData.actualPrice
-        ? productData.offerPrice
-        : productData.actualPrice;
-
-    cart.products[productIndex].quantity += quantity;
-
-    cart.products[productIndex].price = price;
-    cart.products[productIndex].totalPrice =
-      cart.products[productIndex].quantity * price;
-
-    cart.cartTotal = cart.products.reduce((sum, item) => sum + item.totalPrice, 0);
-
-    await cart.save();
-
-    res.status(200).json({
-      message: "Cart updated successfully (quantity increased)",
-      cart,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: "Something went wrong" });
-  }
 };
 
 
@@ -135,7 +145,6 @@ exports.updatecart = async (req, res) => {
 exports.deleteproduct = async (req, res) => {
     try {
         const cartid = req.params.cartid
-        console.log(cartid, "gg");
 
         const findcart = await cartModel.findOneAndDelete(cartid)
         if (!findcart) {
@@ -152,7 +161,6 @@ exports.deleteproduct = async (req, res) => {
 exports.getusercart = async (req, res) => {
     try {
         const id = req.params.id
-        console.log(id, "id");
         const finduser = await cartModel.find({ userId: id }).populate("products.productId");
 
         console.log(finduser);

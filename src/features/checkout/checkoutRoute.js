@@ -4,6 +4,7 @@ const checkoutController=require('./checkoutController')
 
 router.get('/loadcheckout',checkoutController.loadcheckout)
 router.post('/applycoupan',checkoutController.Applycoupan)
+router.post('/removecoupan',checkoutController.Removecoupan)
 
 router.post("/createorder", checkoutController.createRazorpayOrder);
 router.post("/verifypayment", checkoutController.verifyRazorpayPayment);

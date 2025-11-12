@@ -44,6 +44,7 @@ exports.Applycoupan = async (req, res) => {
     }
 
     const findcoupan = await coupan.findOne({ couponcode: couponcode })
+    
 
     if (!findcoupan) {
       return res.status(404).json({ message: "no coupan found" })
@@ -64,12 +65,13 @@ exports.Applycoupan = async (req, res) => {
 
       await findcoupan.save()
 
-      if (findcart) {
         findcart.cartTotal = finalamount
+        findcart.coupan={
+          coupancode:couponcode,
+          discount:finalamount
+        }
         await findcart.save()
-      }
-
-
+      
       res.status(200).json({ message: "coupan applied", finalamount, updatedcart: findcart, success: true })
     } else {
       return res.status(400).json({ message: "Minimum purchase amount required to use this coupon", success: false, });
@@ -82,6 +84,37 @@ exports.Applycoupan = async (req, res) => {
 
   }
 }
+
+
+
+exports.Removecoupan=async(req,res)=>{
+  try {
+    const {userid}=req.body
+
+    const Cartt=await cartModel.findOne({userId:userid})
+    if(!Cartt){
+       return res.status(404).json({ message: "Cart not found" });  
+      }
+
+      if (!Cartt.coupan || !Cartt.coupan.coupancode) {
+      return res.status(400).json({ message: "No coupon applied" });
+    }
+
+    Cartt.cartTotal=Cartt.products.reduce((sum,i)=>{
+      sum +i.totalPrice
+    },0)
+
+    Cartt.coupan=null
+    await Cartt.save()
+
+     res.status(200).json({message: "Coupon removed successfully",Cartt,});
+  } catch (error) {
+    console.log(error.message);
+    
+  }
+}
+
+
 
 
 

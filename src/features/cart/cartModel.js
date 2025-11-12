@@ -6,30 +6,35 @@ const cartSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  products :[{
-      productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-        required: true
-      },
+  products: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+ 
       quantity: {
-        type: Number,
-        required: true,
-        default: 1
-      },
-      price: {
-        type: Number,
-        required: true
-      },
-  totalPrice: { 
+      type: Number,
+      required: true,
+      default: 1
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    totalPrice: {
+      type: Number,
+      default: 0
+    }
+  }],
+     coupan: {
+      coupancode:{type:String},
+      discount:{type:Number}
+    },
+  cartTotal: {
     type: Number,
     default: 0
-  }
-}],
- cartTotal: 
- { type: Number, 
-  default: 0 
-},
+  },
 });
 
 
