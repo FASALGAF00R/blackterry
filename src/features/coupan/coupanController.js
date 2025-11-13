@@ -2,7 +2,6 @@ const { findByIdAndDelete } = require('../user/userModel');
 const coupan=require('./coupanModel')
 // coupan managed by admin
 
-console.log(coupan,"coupannnnnnnnnnnn");
 
 
 exports.Addcoupan=async(req,res)=>{

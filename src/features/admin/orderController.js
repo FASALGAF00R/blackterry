@@ -20,23 +20,6 @@ exports.vieworders=async(req,res)=>{
     }
 }
 
-// exports.getsingleorders=async(req,res)=>{
-//     try {
-//         const orderid=req.params
-//         console.log(orderid);
-//         const findorder=await Checkout.findById({_id:orderid})
-
-//         if(!findorder){
-//             return res.status(404).json({ message: "Order not found" }); 
-//         }
-//         res.status(200).json({success:true,findorder})
-//     } catch (error) {
-//         console.log(error.message);
-        
-//     }
-// }
-
-
 
 exports.getSingleorder=async(req,res)=>{
     try {

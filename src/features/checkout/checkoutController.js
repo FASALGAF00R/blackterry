@@ -164,7 +164,7 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     }
 
-    //  Step 3: If not found, create a new checkout
+    //   If not found, create a new checkout
     const options = {
       amount: totalAmount * 100,
       currency: "INR",
