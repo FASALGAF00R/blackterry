@@ -127,79 +127,101 @@ const otpverfiy = async (req, res) => {
 
 }
 
-
+// /api/products?categoryName=men&title=shirt&minprice=500&maxprice=2000&sortby=actualPrice&order=asc
+// sortby=actualPrice&order=desc
 const listproducts = async (req, res) => {
-    try {
-        const { page = 1, limit = 1, sortby = 'title', order = 'asc', title, categoryName, minprice, maxprice } = req.query
-        console.log(req.query, 'queryyy');
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortby = "title",
+      order = "asc",
+      title,
+      categoryName,
+      minprice,
+      maxprice,
+    } = req.query;
 
-        console.log(title, "search");
-        console.log(categoryName, "category");
+    const matchstage = {};
 
-        const matchstage = {}
-        console.log(matchstage, 'matchstage');
-
-        if (categoryName) {
-            matchstage.categoryName = categoryName;
-        }
-
-        if (minprice && maxprice) {
-            matchstage.actualPrice = { $gte: Number(minprice), $lte: Number(maxprice) };
-        } else if (minprice) {
-            matchstage.actualPrice = { $gte: Number(minprice) };
-        } else if (maxprice) {
-            matchstage.actualPrice = { $lte: Number(maxprice) };
-        }
-
-        // search by title or category
-
-        if (title) {
-            matchstage.$or = [{ title: { $regex: title, $options: 'i' } },
-            { categoryName: { $regex: categoryName, $options: 'i' } }
-            ]
-        }
-
-        const pipeline = [
-            { $match: matchstage },
-            {
-                $project
-                    : {
-                    categoryName: 1, title: 1, description: 1,
-                    actualPrice: 1, images: 1,
-                    product_Code: 1, discount: 1,
-                    offerPrice: { $subtract: ["$actualPrice", { $multiply: ["$actualPrice", { $divide: ["$discount", 100] }] }] },
-                    manufacture_name: 1, manufacturerBrand: 1, manufacturerAddress: 1, totalStock: 1
-                }
-            },
-        ]
-
-        const sortOrder = order === 'desc' ? -1 : 1;
-        pipeline.push({ $sort: { [sortby]: sortOrder } });
-
-        const skip = (Number(page) - 1) * Number(limit);
-        pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: Number(limit) });
-
-
-        const totalProducts = await products.countDocuments(matchstage);
-
-        const Allproducts = await products.aggregate(pipeline);
-
-        return res.status(200).json({
-            totalProducts,
-            totalPages: Math.ceil(totalProducts / Number(limit)),
-            currentPage: Number(page),
-            products: Allproducts
-        });
-    } catch (error) {
-        console.log(error.message);
+    if (categoryName) {
+      matchstage.categoryName = { $regex: `^${categoryName}$`, $options: "i" };
     }
-}
+
+    if (title) {
+      matchstage.title = { $regex: title, $options: "i" };
+    }
+
+    if (minprice && maxprice) {
+      matchstage.actualPrice = {
+        $gte: Number(minprice),
+        $lte: Number(maxprice),
+      };
+    } else if (minprice) {
+      matchstage.actualPrice = { $gte: Number(minprice) };
+    } else if (maxprice) {
+      matchstage.actualPrice = { $lte: Number(maxprice) };
+    }
+
+    const isFilterEmpty = Object.keys(matchstage).length === 0;
+
+    const sortOrder = order === "desc" ? -1 : 1;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const pipeline = [
+      ...(isFilterEmpty ? [] : [{ $match: matchstage }]),
+      {
+        $project: {
+          title: 1,
+          categoryName: 1,
+          description: 1,
+          actualPrice: 1,
+          discount: 1,
+          offerPrice: {
+            $subtract: [
+              "$actualPrice",
+              {
+                $multiply: ["$actualPrice", { $divide: ["$discount", 100] }],
+              },
+            ],
+          },
+          images: 1,
+          product_Code: 1,
+          manufacture_name: 1,
+          manufacturerBrand: 1,
+          manufacturerAddress: 1,
+          totalStock: 1,
+        },
+      },
+      { $sort: { [sortby]: sortOrder } },
+      { $skip: skip },
+      { $limit: Number(limit) },
+    ];
+
+    const [productsList, totalProducts] = await Promise.all([
+      products.aggregate(pipeline),
+      isFilterEmpty ? products.countDocuments() : products.countDocuments(matchstage),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalProducts,
+      totalPages: Math.ceil(totalProducts / Number(limit)),
+      currentPage: Number(page),
+      products: productsList,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 
 module.exports = {
-    registerUser,
-    loginUser,
-    otpverfiy,
-    listproducts
+        registerUser,
+        loginUser,
+        otpverfiy,
+        listproducts
 
-};
+    };

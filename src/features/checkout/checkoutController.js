@@ -44,7 +44,7 @@ exports.Applycoupan = async (req, res) => {
     }
 
     const findcoupan = await coupan.findOne({ couponcode: couponcode })
-    
+
 
     if (!findcoupan) {
       return res.status(404).json({ message: "no coupan found" })
@@ -65,13 +65,13 @@ exports.Applycoupan = async (req, res) => {
 
       await findcoupan.save()
 
-        findcart.cartTotal = finalamount
-        findcart.coupan={
-          coupancode:couponcode,
-          discount:finalamount
-        }
-        await findcart.save()
-      
+      findcart.cartTotal = finalamount
+      findcart.coupan = {
+        coupancode: couponcode,
+        discount: finalamount
+      }
+      await findcart.save()
+
       res.status(200).json({ message: "coupan applied", finalamount, updatedcart: findcart, success: true })
     } else {
       return res.status(400).json({ message: "Minimum purchase amount required to use this coupon", success: false, });
@@ -87,30 +87,30 @@ exports.Applycoupan = async (req, res) => {
 
 
 
-exports.Removecoupan=async(req,res)=>{
+exports.Removecoupan = async (req, res) => {
   try {
-    const {userid}=req.body
+    const { userid } = req.body
 
-    const Cartt=await cartModel.findOne({userId:userid})
-    if(!Cartt){
-       return res.status(404).json({ message: "Cart not found" });  
-      }
+    const Cartt = await cartModel.findOne({ userId: userid })
+    if (!Cartt) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
-      if (!Cartt.coupan || !Cartt.coupan.coupancode) {
+    if (!Cartt.coupan || !Cartt.coupan.coupancode) {
       return res.status(400).json({ message: "No coupon applied" });
     }
 
-    Cartt.cartTotal=Cartt.products.reduce((sum,i)=>{
-      sum +i.totalPrice
-    },0)
+    Cartt.cartTotal = Cartt.products.reduce((sum, i) => {
+      sum + i.totalPrice
+    }, 0)
 
-    Cartt.coupan=null
+    Cartt.coupan = null
     await Cartt.save()
 
-     res.status(200).json({message: "Coupon removed successfully",Cartt,});
+    res.status(200).json({ message: "Coupon removed successfully", Cartt, });
   } catch (error) {
     console.log(error.message);
-    
+
   }
 }
 
@@ -230,8 +230,8 @@ exports.verifyRazorpayPayment = async (req, res) => {
     }
 
     const findAddress = await address.findOne({ userid: userId });
-    console.log(findAddress,"............");
-    
+    console.log(findAddress, "............");
+
     if (!findAddress) {
       return res.status(404).json({ message: "Address not found" });
     }
@@ -243,25 +243,25 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
 
 
-      existingCheckout.paymentStatus = "Paid";
-      existingCheckout.orderStatus = "Confirmed";
-      existingCheckout.razorpayPaymentId = razorpayPaymentId;
-      existingCheckout.address = findAddress;
-      existingCheckout.paymentDate = new Date();
+    existingCheckout.paymentStatus = "Paid";
+    existingCheckout.orderStatus = "Confirmed";
+    existingCheckout.razorpayPaymentId = razorpayPaymentId;
+    existingCheckout.address = findAddress;
+    existingCheckout.paymentDate = new Date();
 
-      await existingCheckout.save();
+    await existingCheckout.save();
 
-      for (const item of existingCheckout.products) {
-        await Product.updateOne(
-          { _id: item.productId },
-          { $inc: { totalStock: -item.quantity } }
-        );
-      }
+    for (const item of existingCheckout.products) {
+      await Product.updateOne(
+        { _id: item.productId },
+        { $inc: { totalStock: -item.quantity } }
+      );
+    }
 
     await cartModel.deleteOne({ userId });
 
 
-     return res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Payment verified successfully",
       order: existingCheckout,
@@ -275,6 +275,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
 };
 
 
+// product -
 exports.createCODOrder = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -290,7 +291,7 @@ exports.createCODOrder = async (req, res) => {
     }
 
     const products = finusercart.products.map((item) => ({
-      productId: item.productId._id,
+      productId: item.productId,
       title: item.productId.title,
       quantity: item.quantity,
       price: item.price,
@@ -310,6 +311,15 @@ exports.createCODOrder = async (req, res) => {
       orderDate: new Date(),
     });
 
+
+    for (const item of finusercart.products) {
+      await Product.updateOne(
+        { _id: item.productId },
+        { $inc: { totalStock: -item.quantity } }
+      );
+    }
+
+
     await checkout.save();
 
     await cartModel.deleteOne({ userId });
@@ -327,7 +337,7 @@ exports.createCODOrder = async (req, res) => {
 };
 
 
-exports.downloadinvoice  = async (req, res) => {
+exports.downloadinvoice = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Checkout.findById(orderId).populate("products.productId");

@@ -13,6 +13,12 @@ exports.addtocart = async (req, res) => {
         if (!findProduct) {
             return res.status(404).json({ message: "Product not found" });
         }
+        if(findProduct.totalStock <=0){
+            return res.status(404).json({message:"stock empty"})
+
+        }
+            
+        
         // taking product price accordingly
 
         const price = findProduct.offerPrice && findProduct.offerPrice < findProduct.actualPrice
