@@ -51,7 +51,7 @@ exports.Orderstatus=async(req,res)=>{
         const Findproduct=await Checkout.findById({_id:orderid}).populate("products.productId")
         console.log(Findproduct,"llll");
         
-        if(orderStatus==="Delivered" && paymentStatus==="Paid"){
+        if(orderStatus==="Delivered" || (orderStatus=="confirmed"  && paymentStatus==="Paid")){
             for(const item of Findproduct.products){
                 const productid=item.productId
                 const qty=item.quantity

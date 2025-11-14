@@ -299,6 +299,14 @@ exports.createCODOrder = async (req, res) => {
     }));
 
 
+    for (const item of finusercart.products) {
+  if (item.productId.totalStock < item.quantity) {
+    return res.status(400).json({
+      success: false,
+      message: `${item.productId.title} is out of stock or not enough quantity available`
+    });
+  }
+}
 
     const checkout = new Checkout({
       userId,

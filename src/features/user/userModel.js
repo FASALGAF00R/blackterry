@@ -29,10 +29,6 @@ const userSchema = new mongoose.Schema({
     isblock :{
         type:Boolean,
         default:true
-    },
-    is_delete :{
-        type:Boolean,
-        default:true
     }
 });
 const User = mongoose.model('User', userSchema);
